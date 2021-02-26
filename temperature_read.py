@@ -3,9 +3,11 @@ import sqlite3
 import time
 from w1thermsensor import W1ThermSensor
 
+# Define data.db directory
+data_db = '/home/pi/growPiProject/data.db'
 
 # Initialise sqlite
-con = sqlite3.connect('data.db')
+con = sqlite3.connect(data_db)
 cur = con.cursor()
 
 # Create table
