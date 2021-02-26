@@ -20,5 +20,4 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-# * * * * * python3 /home/pi/testTemperature.py
 * * * * * python3 /home/pi/growPiProject/temperature_read.py
