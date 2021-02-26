@@ -10,8 +10,8 @@ cur = con.cursor()
 
 # Create table
 cur.execute('''CREATE TABLE IF NOT EXISTS temperature
-            (timestamp real, temperature1 real, temperature2 real, 
-            temperature3 real, temperature4 real, temperature5 real)''')
+            (timestamp REAL, temperature1 REAL, temperature2 REAL, 
+            temperature3 REAL, temperature4 REAL, temperature5 REAL)''')
 
 # Setup sensor address
 try:
