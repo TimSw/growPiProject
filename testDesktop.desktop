@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=testDesktop
+Comment=testDesktop voor MainApp
+NoDisplay=false
+Exec=/usr/bin/lxterminal -e /home/pi/growPiProject/mainapp_start.sh
+NotShowIn=GNOME;KDE;XFCE;
+
+# File location
+# /etc/xdg/autostart/
