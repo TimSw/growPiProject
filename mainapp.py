@@ -34,8 +34,8 @@ def process_imput():
             cur = con.cursor()
 
             # Create table
-            cur.execute('''CREATE TABLE IF NOT EXISTS time
-                                (timer TEXT, hour INTEGER, minute INTEGER)''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS light
+                        (hour INTEGER, minute INTEGER)''')
 
             # Initialise current time
             nu = datetime.datetime.now()
@@ -43,11 +43,11 @@ def process_imput():
             print("en", nu.minute, "minuten")
 
             # Select data from table
-            cur.execute("SELECT * FROM time WHERE timer = light on")
+            cur.execute("SELECT * FROM light")
             data = cur.fetchone()
             print(data)
-            import_startuur = data[1]
-            import_starmin = data[2]
+            import_startuur = data[0]
+            import_starmin = data[1]
             print(import_startuur)
             print(import_starmin)
 
@@ -444,7 +444,7 @@ class ClockWindow(QtWidgets.QDialog):
         # Light pushbutton
         pb_set_light_on = QtWidgets.QPushButton("Set", self)
         pb_set_light_on.clicked.connect(
-            lambda: self.update_settings("light on",
+            lambda: self.update_settings("light",
                                          cbx_h_light_on.currentText(),
                                          cbx_m_light_on.currentText()))
         pb_set_light_on.clicked.connect(self.update_widget)
@@ -572,22 +572,21 @@ class ClockWindow(QtWidgets.QDialog):
         self.cams.show()
         self.close()
 
-    def update_settings(self, timer, hour, minute):
+    def update_settings(self, table, hour, minute):
         # Initialise sqlite
         con = sqlite3.connect(data_db)
         cur = con.cursor()
 
         # Fill data
-        data = (hour, minute, timer)
+        data = (hour, minute)
 
         # TODO create timers when initialising database
         # Create table
-        cur.execute('''CREATE TABLE IF NOT EXISTS time
-                    (timer TEXT, hour INTEGER, minute INTEGER)''')
+        cur.execute('''CREATE TABLE IF NOT EXISTS ?
+                    (hour INTEGER, minute INTEGER)''', table)
 
         # Update data
-        cur.execute("UPDATE time SET hour = ?, minute = ? WHERE timer = ?",
-                    data)
+        cur.execute("UPDATE time SET hour = ?, minute = ?", data)
 
         # Save (commit) the changes
         con.commit()
