@@ -23,7 +23,8 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 # ch.setLevel(logging.ERROR)
 # create formatter and add it to the handlers
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 # add the handlers to the logger
@@ -46,7 +47,7 @@ RPi.GPIO.setmode(RPi.GPIO.BOARD)
 RPi.GPIO.setup(outputList, RPi.GPIO.OUT, initial=uit)
 
 
-def process_input():
+def process_timers():
     while True:
         try:
             # Initialise sqlite
@@ -57,49 +58,231 @@ def process_input():
             cur.execute('''CREATE TABLE IF NOT EXISTS timers
                         (setting TEXT, data_1 INTEGER, data_2 INTEGER)''')
 
-            # Initialise current time
-            # nu = datetime.datetime.now()
-            nu = datetime.datetime.now().time()
-            logger.debug("Het is %s uur en %s minuten", nu.hour, nu.minute)
-
             # Select start time from table
             # Initialise timer
             timer_on = ("light_on",)
             # Select data
             cur.execute("SELECT * FROM timers WHERE setting = ?", timer_on)
             data_timer_on = cur.fetchone()
-            logger.debug(data_timer_on)
-            startuur = data_timer_on[1]
+            starthour = data_timer_on[1]
             startmin = data_timer_on[2]
-            starttijd = datetime.time(startuur, startmin)
+            start_light = datetime.time(starthour, startmin)
 
             # Select stop time from table
             # Initialise timer
-            timer_off = ("light_off", )
+            timer_off = ("light_off",)
             # Select data
             cur.execute("SELECT * FROM timers WHERE setting = ?", timer_off)
             data_timer_off = cur.fetchone()
-            logger.debug(data_timer_off)
-            stopuur = data_timer_off[1]
+            stophour = data_timer_off[1]
             stopmin = data_timer_off[2]
-            stoptijd = datetime.time(stopuur, stopmin)
+            stop_light = datetime.time(stophour, stopmin)
 
-            if starttijd < nu < stoptijd:
-                RPi.GPIO.output(29, aan)
-                logger.info("1 AAN")
-                logger.info("Sleep for 10 seconds")
-                time.sleep(10)
+            # Select pump settings from table
+            # Initialise timer
+            pump_setting = ("pump_during",)
+            # Select data
+            cur.execute("SELECT * FROM timers WHERE setting = ?", pump_setting)
+            data_pump_setting = cur.fetchone()
+            pump_repeat = data_pump_setting[1]
+            pump_during = data_pump_setting[2]
+            pump_time = datetime.time(00, pump_during)
 
+            # Select airstone settings from table
+            # Initialise timer
+            air_setting = ("air_on",)
+            # Select data
+            cur.execute("SELECT * FROM timers WHERE setting = ?", air_setting)
+            data_air_setting = cur.fetchone()
+            air_on = data_pump_setting[1]
+            time_air_on = datetime.time(00, air_on)
+
+            # Initialise current time
+            now = datetime.datetime.now().time()
+
+            date = datetime.date(1, 1, 1)
+            datetime_start = datetime.datetime.combine(date, start_light)
+            datetime_stop = datetime.datetime.combine(date, stop_light)
+
+            time_light_on = datetime_stop - datetime_start
+
+            time_btwn_pumping = time_light_on // pump_repeat
+
+            logger.debug("Het is %s uur en %s minuten", now.hour, now.minute)
+            logger.debug("Lamp gaat aan om %s", start_light)
+            logger.debug("Lamp gaat uit om %s", stop_light)
+            logger.debug("Licht is aan gedurende %s", time_light_on)
+            logger.debug("Pomp werkt gedurende %s en gaat %s keer aan om de %s",
+                         pump_time, pump_repeat, time_btwn_pumping)
+            logger.debug("Airstone gaat %s voor de pomp aan", time_air_on)
+
+            # Light
+            if start_light < now < stop_light:
+                Light.lightvariabele_1 = 1
+                logger.debug("Light.lightvariabele_1 = %s",
+                             Light.lightvariabele_1)
+                logger.info("TIMER LIGHT ON")
             else:
-                RPi.GPIO.output(29, uit)
-                logger.info("1 UIT")
-                logger.info("Sleep for 10 seconds")
-                time.sleep(10)
+                Light.lightvariabele_1 = 0
+                logger.debug("Light.lightvariabele_1 = %s",
+                             Light.lightvariabele_1)
+                logger.info("TIMER LIGHT OFF")
+
+            time.sleep(10)
 
         except Exception as e:
             logger.exception(e)
             # Close sql connection
             con.close()
+
+
+def process_outputs(start_light, stop_light, pump_time, pump_repeat,
+                    time_btwn_pumping, time_air_on):
+    """
+    while True:
+        # Initialise current time
+        now = datetime.datetime.now().time()
+
+        # Initialise wait time airstone
+        wait_for_air = datetime.time(0, 1)
+        start_air = start_light + wait_for_air
+        start_pump = start_air + time_air_on
+        stop_pump = start_pump + pump_time
+
+        # Populate START_PUMP STOP_PUMP depending on pump_repeat
+        # TODO make function to automate numbering
+        if pump_repeat == 1:
+            start_pump_1 = start_pump
+            stop_pump_1 = stop_pump
+        elif pump_repeat == 2:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+        elif pump_repeat == 3:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+        elif pump_repeat == 4:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            start_pump_4 = start_pump_3 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+            stop_pump_4 = stop_pump_3 + time_btwn_pumping
+        elif pump_repeat == 5:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            start_pump_4 = start_pump_3 + time_btwn_pumping
+            start_pump_5 = start_pump_4 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+            stop_pump_4 = stop_pump_3 + time_btwn_pumping
+            stop_pump_5 = stop_pump_4 + time_btwn_pumping
+        elif pump_repeat == 6:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            start_pump_4 = start_pump_3 + time_btwn_pumping
+            start_pump_5 = start_pump_4 + time_btwn_pumping
+            start_pump_6 = start_pump_5 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+            stop_pump_4 = stop_pump_3 + time_btwn_pumping
+            stop_pump_5 = stop_pump_4 + time_btwn_pumping
+            stop_pump_6 = stop_pump_6 + time_btwn_pumping
+        elif pump_repeat == 7:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            start_pump_4 = start_pump_3 + time_btwn_pumping
+            start_pump_5 = start_pump_4 + time_btwn_pumping
+            start_pump_6 = start_pump_5 + time_btwn_pumping
+            start_pump_7 = start_pump_6 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+            stop_pump_4 = stop_pump_3 + time_btwn_pumping
+            stop_pump_5 = stop_pump_4 + time_btwn_pumping
+            stop_pump_6 = stop_pump_5 + time_btwn_pumping
+            stop_pump_7 = stop_pump_6 + time_btwn_pumping
+        elif pump_repeat == 8:
+            start_pump_1 = start_pump
+            start_pump_2 = start_pump_1 + time_btwn_pumping
+            start_pump_3 = start_pump_2 + time_btwn_pumping
+            start_pump_4 = start_pump_3 + time_btwn_pumping
+            start_pump_5 = start_pump_4 + time_btwn_pumping
+            start_pump_6 = start_pump_5 + time_btwn_pumping
+            start_pump_7 = start_pump_6 + time_btwn_pumping
+            start_pump_8 = start_pump_7 + time_btwn_pumping
+            stop_pump_1 = stop_pump
+            stop_pump_2 = stop_pump_1 + time_btwn_pumping
+            stop_pump_3 = stop_pump_2 + time_btwn_pumping
+            stop_pump_4 = stop_pump_3 + time_btwn_pumping
+            stop_pump_5 = stop_pump_4 + time_btwn_pumping
+            stop_pump_6 = stop_pump_5 + time_btwn_pumping
+            stop_pump_7 = stop_pump_6 + time_btwn_pumping
+            stop_pump_8 = stop_pump_7 + time_btwn_pumping
+
+        # Light
+        if start_light < now < stop_light:
+            RPi.GPIO.output(29, aan)
+            logger.info("LIGHT ON")
+
+        else:
+            RPi.GPIO.output(29, uit)
+            logger.info("LIGHT OFF")
+
+        # Airstone
+        if start_air < now < stop_pump:
+            RPi.GPIO.output(31, aan)
+            logger.info("AIRSTONE ON")
+
+        else:
+            RPi.GPIO.output(31, uit)
+            logger.info("AIRSTONE OFF")
+
+        # Pump
+        if start_pump < now < stop_pump:
+            RPi.GPIO.output(33, aan)
+            logger.info("PUMP ON")
+
+        logger.info("Sleep for 10 seconds")
+        time.sleep(10)"""
+
+
+class Light:
+    def __init__(self):
+        pass
+
+    lightvariabele_1 = 1
+    logger.info("testvariabele_1 in Light class = ", lightvariabele_1)
+
+    def light(self):
+        while True:
+            if self.lightvariabele_1 == 1:
+                logger.info("self.testvariabele_1", self.lightvariabele_1)
+                RPi.GPIO.output(29, aan)
+                logger.info("OUTPUT LIGHT ON")
+                time.sleep(10)
+            else:
+                logger.info("self.testvariabele_1", self.lightvariabele_1)
+                RPi.GPIO.output(29, uit)
+                logger.info("OUTPUT LIGHT OFF")
+                time.sleep(10)
+
+    def run(self):
+        # t1 = threading.Thread(target=self.light)
+        t1 = threading.Thread(target=self.light, daemon=True)
+        t1.start()
 
 
 class Window(QtWidgets.QWidget):
@@ -543,9 +726,6 @@ class ClockWindow(QtWidgets.QDialog):
         lbl_pump = QtWidgets.QLabel("Timer Pomp", self)
         lbl_times = QtWidgets.QLabel("maal", self)
         lbl_during = QtWidgets.QLabel("minuten", self)
-        lbl_repeat = QtWidgets.QLabel("om de", self)
-        lbl_every_u = QtWidgets.QLabel("uur", self)
-        lbl_every_m = QtWidgets.QLabel("minuten", self)
 
         # Pump combobox
         cbx_times = QtWidgets.QComboBox(self)
@@ -563,11 +743,6 @@ class ClockWindow(QtWidgets.QDialog):
             lambda: self.update_settings("pump_during",
                                          cbx_times.currentText(),
                                          cbx_during.currentText()))
-        pb_pump_every = QtWidgets.QPushButton("Set", self)
-        pb_pump_every.clicked.connect(
-            lambda: self.update_settings("pump_repeat",
-                                         cbx_every_u.currentText(),
-                                         cbx_every_m.currentText()))
 
         # Airstone labels
         lbl_air = QtWidgets.QLabel("Timer Airstone", self)
@@ -610,13 +785,6 @@ class ClockWindow(QtWidgets.QDialog):
         grid.addWidget(cbx_during, 5, 3)
         grid.addWidget(lbl_during, 5, 4)
         grid.addWidget(pb_pump_times_during, 5, 5)
-        grid.addWidget(lbl_repeat, 6, 0)
-        grid.addWidget(cbx_every_u, 6, 1)
-        grid.addWidget(lbl_every_u, 6, 2)
-        grid.addWidget(cbx_every_m, 6, 3)
-        grid.addWidget(lbl_every_m, 6, 4)
-        grid.addWidget(pb_pump_every, 6, 5)
-# TODO rename repeat and during
         grid.addWidget(lbl_air, 8, 0)
         grid.addWidget(lbl_air_start, 9, 0)
         grid.addWidget(cbx_air_on_min, 9, 1)
@@ -664,20 +832,21 @@ class ClockWindow(QtWidgets.QDialog):
         # Close connection
         con.close()
 
-    def update_text(self, timer):
+    def update_text(self, setting):
         # Initialise sqlite
         con = sqlite3.connect(data_db)
         cur = con.cursor()
 
         # Create table
-        cur.execute('''CREATE TABLE IF NOT EXISTS time
-                            (timer TEXT, hour INTEGER, minute INTEGER)''')
+        cur.execute('''CREATE TABLE IF NOT EXISTS timers
+                    (setting TEXT, data_1 INTEGER, data_2 INTEGER)''')
 
         # Read data
-        cur.execute("SELECT hour, minute FROM time WHERE timer = ?", (timer,))
+        cur.execute("SELECT data_1, data_2 FROM timers WHERE setting = ?",
+                    (setting, ))
         data = cur.fetchone()
-        hour = data[0]
-        minute = data[1]
+        hour = data[1]
+        minute = data[2]
 
         # Save (commit) the changes
         con.commit()
@@ -706,11 +875,28 @@ class SettingsWindow(QtWidgets.QDialog):
         push_button.setIconSize(iconsize)
         push_button.clicked.connect(self.go_main_window)
 
+        # Light labels
+        lbl_light = QtWidgets.QLabel("Licht")
+
+        tb_set_light = QtWidgets.QPushButton("AAN / UIT", self)
+        tb_set_light.setCheckable(True)
+        tb_set_light.toggle()
+        # tb_set_light.clicked.connect(self.btn_action_pump)
+        tb_set_light.setFixedSize(100, 50)
+
+        # Timerwindow layout
+        grid = QtWidgets.QGridLayout()
+        grid.setSpacing(10)
+
+        grid.addWidget(lbl_light, 0, 0)
+        grid.addWidget(tb_set_light, 0, 1)
+
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(0)
         hbox.addWidget(push_button)
 
         vbox = QtWidgets.QVBoxLayout()
+        vbox.addLayout(grid)
         vbox.addStretch(0)
         vbox.addLayout(hbox)
 
@@ -782,10 +968,14 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     ex = Window()
 
+    # Light class
+    l1 = Light()
+    l1.run()
+
     # Threading
-    logger.info("Voor creëren thread 1")
-    t1 = threading.Thread(target=process_input, daemon=True)
-    logger.info("Voor starten thread 1")
+    logger.info("Voor creëren thread process_timers")
+    t1 = threading.Thread(target=process_timers, daemon=True)
+    logger.info("Voor creëren thread light")
     t1.start()
 
     sys.exit(app.exec_())
