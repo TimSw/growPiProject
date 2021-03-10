@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/growPiProject.iml" filepath="$PROJECT_DIR$/.idea/growPiProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../solarPi/.idea/solarPi.iml" filepath="$PROJECT_DIR$/../solarPi/.idea/solarPi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../test/.idea/test.iml" filepath="$PROJECT_DIR$/../test/.idea/test.iml" />
     </modules>
   </component>
 </project>
