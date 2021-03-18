@@ -35,7 +35,7 @@ logger.addHandler(ch)
 # Define data.db directory
 data_db = '/home/pi/growPiProject/data.db'
 
-# Initialise iconsize
+# Initialise icon_size
 iconsize = QtCore.QSize()
 iconsize.setWidth(40)
 iconsize.setHeight(40)
@@ -116,12 +116,12 @@ def process_timers():
             # Light
             if start_light < now < stop_light:
                 Lightoutput.light_output = 1
-                logger.debug("Lightoutput.light_output = %s",
+                logger.debug("LightOutput.light_output = %s",
                              Lightoutput.light_output)
                 logger.info("TIMER LIGHT ON")
             else:
                 Lightoutput.light_output = 0
-                logger.debug("Lightoutput.light_output = %s",
+                logger.debug("LightOutput.light_output = %s",
                              Lightoutput.light_output)
                 logger.info("TIMER LIGHT OFF")
 
@@ -286,7 +286,7 @@ class Lightoutput:
         pass
 
     light_output = 0
-    logger.debug("light_output in Lightoutput class = %s", light_output)
+    logger.debug("light_output in LightOutput class = %s", light_output)
 
     def set_light_output(self):
         while True:
@@ -311,7 +311,7 @@ class Pumpoutput:
         pass
 
     pump_output = 0
-    logger.debug("pump_output in Pumpoutput class = %s", pump_output)
+    logger.debug("pump_output in PumpOutput class = %s", pump_output)
 
     def set_pump_output(self):
         while True:
@@ -336,7 +336,7 @@ class Airstoneoutput:
         pass
 
     airstone_output = 0
-    logger.debug("airstone_output in Airstoneoutput class = %s",
+    logger.debug("airstone_output in AirstoneOutput class = %s",
                 airstone_output)
 
     def set_airstone_output(self):
@@ -383,7 +383,7 @@ class Lightsetting:
         con.close()
 
     light_setting = light_on_off
-    logger.info("light_setting in Lightsetting class = %s", light_setting)
+    logger.info("light_setting in LightSetting class = %s", light_setting)
 
 
 class Pumpsetting:
@@ -411,7 +411,7 @@ class Pumpsetting:
         con.close()
 
     pump_setting = pump_on_off
-    logger.info("pump_setting in Pumpsetting class = %s", pump_setting)
+    logger.info("pump_setting in PumpSetting class = %s", pump_setting)
 
 
 class Airstonesetting:
@@ -439,7 +439,7 @@ class Airstonesetting:
         con.close()
 
     airstone_setting = airstone_on_off
-    logger.info("airstone_setting in Airstonesetting class = %s",
+    logger.info("airstone_setting in AirstoneSetting class = %s",
                 airstone_setting)
 
 
@@ -752,12 +752,12 @@ class LightWindow(QtWidgets.QDialog):
     def btn_action(self):
         if self.tb_light.isChecked():
             Lightoutput.light_output = 1
-            logger.debug("Lightoutput.light_output = %s",
+            logger.debug("LightOutput.light_output = %s",
                          Lightoutput.light_output)
             logger.info("BUTTON LIGHTWINDOW ON")
         else:
             Lightoutput.light_output = 0
-            logger.debug("Lightoutput.light_output = %s",
+            logger.debug("LightOutput.light_output = %s",
                          Lightoutput.light_output)
             logger.info("BUTTON LIGHTWINDOW OFF")
 
@@ -808,24 +808,24 @@ class WaterWindow(QtWidgets.QDialog):
     def btn_action_pump(self):
         if self.tb_pomp.isChecked():
             Pumpoutput.pump_output = 1
-            logger.debug("Pumpoutput.pump_output = %s",
+            logger.debug("PumpOutput.pump_output = %s",
                          Pumpoutput.pump_output)
             logger.info("BUTTON PUMP WATERWINDOW ON")
         else:
             Pumpoutput.pump_output = 0
-            logger.debug("Pumpoutput.pump_output = %s",
+            logger.debug("PumpOutput.pump_output = %s",
                          Pumpoutput.pump_output)
             logger.info("BUTTON PUMP WATERWINDOW OFF")
 
     def btn_action_airstone(self):
         if self.tb_airstone.isChecked():
             Airstoneoutput.airstone_output = 1
-            logger.debug("Airstoneoutput.airstone_output = %s",
+            logger.debug("AirstoneOutput.airstone_output = %s",
                          Airstoneoutput.airstone_output)
             logger.info("BUTTON AIRSTONE WATERWINDOW ON")
         else:
             Airstoneoutput.airstone_output = 0
-            logger.debug("Airstoneoutput.airstone_output = %s",
+            logger.debug("AirstoneOutput.airstone_output = %s",
                          Airstoneoutput.airstone_output)
             logger.info("BUTTON AIRSTONE WATERWINDOW OFF")
 
@@ -1468,13 +1468,13 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     ex = Window()
 
-    # Lightoutput class
+    # LightOutput class
     l1 = Lightoutput()
     l1.run()
-    # Pumpoutput class
+    # PumpOutput class
     p1 = Pumpoutput()
     p1.run()
-    # Airstoneoutput class
+    # AirstoneOutput class
     a1 = Airstoneoutput()
     a1.run()
 
