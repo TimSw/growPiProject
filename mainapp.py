@@ -84,7 +84,7 @@ def process_timers():
             data_pump_setting = cur.fetchone()
             pump_repeat = data_pump_setting[1]
             pump_during = data_pump_setting[2]
-            pump_time = datetime.time(00, pump_during)
+            time_pump_on = datetime.time(00, pump_during)
 
             # Select airstone settings from table
             # Initialise timer
@@ -111,7 +111,7 @@ def process_timers():
             logger.debug("Lamp gaat uit om %s", stop_light)
             logger.debug("Licht is aan gedurende %s", time_light_on)
             logger.debug("Pomp werkt gedurende %s en gaat %s keer aan om de %s",
-                         pump_time, pump_repeat, time_btwn_pumping)
+                         time_pump_on, pump_repeat, time_btwn_pumping)
             logger.debug("Airstone gaat %s voor de pomp aan", time_air_on)
 
             # Light
@@ -146,7 +146,7 @@ def process_outputs(start_light, stop_light, pump_time, pump_repeat,
         wait_for_air = datetime.time(0, 1)
         start_air = start_light + wait_for_air
         start_pump = start_air + time_air_on
-        stop_pump = start_pump + pump_time
+        stop_pump = start_pump + time_pump_on
 
         # Populate START_PUMP STOP_PUMP depending on pump_repeat
         # TODO make function to automate numbering
