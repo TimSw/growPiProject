@@ -35,7 +35,9 @@ cur = con.cursor()
 # Create table
 cur.execute('''CREATE TABLE IF NOT EXISTS temperature
             (timestamp REAL, temperature1 REAL, temperature2 REAL, 
-            temperature3 REAL, temperature4 REAL, temperature5 REAL)''')
+            temperature3 REAL, temperature4 REAL, temperature5 REAL,
+            temperature6 REAL, temperature7 REAL, temperature8 REAL,
+            temperature9 REAL, temperature10 REAL)''')
 
 # Setup sensor address
 try:
@@ -58,13 +60,29 @@ try:
     sensor5 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "041662af5bff")
 except Exception as e:
     logger.exception(e)
+try:
+    sensor6 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "3c01e076c425")
+except Exception as e:
+    logger.exception(e)
+try:
+    sensor7 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "3c01e0762b7f")
+except Exception as e:
+    logger.exception(e)
+try:
+    sensor8 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "3c01e07642c5")
+except Exception as e:
+    logger.exception(e)
+try:
+    sensor9 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "3c01e07645dc")
+except Exception as e:
+    logger.exception(e)
+try:
+    sensor10 = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, "3c01e0766747")
+except Exception as e:
+    logger.exception(e)
 
 # Initialise temperatures:
-temp1 = 0
-temp2 = 0
-temp3 = 0
-temp4 = 0
-temp5 = 0
+temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10 = 0
 
 # Make timestamp
 now = time.time()
@@ -90,10 +108,31 @@ try:
     temp5 = sensor5.get_temperature()
 except Exception as e:
     logger.exception(e)
+try:
+    temp6 = sensor6.get_temperature()
+except Exception as e:
+    logger.exception(e)
+try:
+    temp7 = sensor7.get_temperature()
+except Exception as e:
+    logger.exception(e)
+try:
+    temp8 = sensor8.get_temperature()
+except Exception as e:
+    logger.exception(e)
+try:
+    temp9 = sensor9.get_temperature()
+except Exception as e:
+    logger.exception(e)
+try:
+    temp10 = sensor10.get_temperature()
+except Exception as e:
+    logger.exception(e)
 
 # Insert a row of data
-cur.execute("INSERT INTO temperature VALUES (?, ?, ?, ?, ?, ?)",
-            (now, temp1, temp2, temp3, temp4, temp5))
+cur.execute("INSERT INTO temperature VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (now, temp1, temp2, temp3, temp4, temp5,
+             temp6, temp7, temp8, temp9, temp10))
 
 # Save (commit) the changes
 con.commit()
