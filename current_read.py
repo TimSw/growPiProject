@@ -33,7 +33,6 @@ A0 = 14     # D14 - A0 - PC0 - ADC[0]
 # Read analog input
 time.sleep(2)
 current = arduino.analogRead(A0)  # Analog input
-#logger.debug("Moisture level = %s", current)
 
 # Make timestamp
 now = time.time()
